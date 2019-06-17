@@ -91,7 +91,7 @@ update_registers_thread = Thread(target=update_modbus_registers, args=(simulated
 update_registers_thread.start()
 
 # Run the server
-log.debug("Starting Modbus server...")
+log.debug("Starting Modbus server; press CTRL+C or CTRL+Z to exit...")
 StartTcpServer(
     simulated_modbus_server_context,
     identity=simulated_modbus_server_identity,
