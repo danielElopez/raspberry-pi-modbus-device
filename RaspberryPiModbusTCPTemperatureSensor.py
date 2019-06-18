@@ -19,6 +19,7 @@ from pymodbus.transaction import ModbusRtuFramer, ModbusAsciiFramer
 from threading import Thread
 from time import sleep
 from os import popen
+from sys import exit
 
 # Configure logging
 import logging
@@ -27,21 +28,23 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 
 # Define the function that updates the registers
+CONTINUE_UPDATING_MODBUS_REGISTERS = False
 
 
 def update_modbus_registers(args):
+    log.debug("Updated thread started.")
     update_interval_seconds = 5
     heartbeat_counter = 1
     heartbeat_counter_max_value = 10
     register_type = 4
     register_offset = 0
-    while (True):
+    while (CONTINUE_UPDATING_MODBUS_REGISTERS is True):
         log.debug("Updating the server registers")
         simulated_modbus_server_context = args[0]
         # Read the board temperature
         temperature = 1
         try:
-            temperature = int((float(popen("vcgencmd measure_temp").readline().replace("temp=", "").replace("'C", "")) * 9 / 5 + 32) * 1000)
+            temperature = int((float(popen("vcgencmd measure_temp").readline().replace("temp=", "").replace("'C", "")) * 9 / 5 + 32) * 100)
         except Exception as ex:
             # Log any error, if it occurs
             log.debug("Error reading temperature: " + str(ex))
@@ -56,6 +59,8 @@ def update_modbus_registers(args):
             heartbeat_counter = 1
         # Wait until the next loop
         sleep(update_interval_seconds)
+    # Once broken out of the loop, note that the thread is over
+    log.debug("Updated thread ended.")
 
 # Specify the Modbus server address and port
 MODBUS_SERVER_ADDRESS = "localhost"
@@ -86,14 +91,23 @@ simulated_modbus_server_identity.ProductName = 'pymodbus Server'
 simulated_modbus_server_identity.ModelName = 'pymodbus Server'
 simulated_modbus_server_identity.MajorMinorRevision = '1.0'
 
-# Initialize the thread that will start updating our Modbus server's registers
-update_registers_thread = Thread(target=update_modbus_registers, args=(simulated_modbus_server_context,))
-update_registers_thread.start()
+try:
+    # Initialize the thread that will start updating our Modbus server's registers
+    CONTINUE_UPDATING_MODBUS_REGISTERS = True
+    update_registers_thread = Thread(target=update_modbus_registers, args=(simulated_modbus_server_context,))
+    update_registers_thread.daemon = True
+    update_registers_thread.start()
 
-# Run the server
-log.debug("Starting Modbus server; press CTRL+C or CTRL+Z to exit...")
-StartTcpServer(
-    simulated_modbus_server_context,
-    identity=simulated_modbus_server_identity,
-    address=(MODBUS_SERVER_ADDRESS, MODBUS_SERVER_PORT)
-)
+    # Run the server
+    log.debug("Starting Modbus server; press CTRL+C or CTRL+Z to exit...")
+    StartTcpServer(
+        simulated_modbus_server_context,
+        identity=simulated_modbus_server_identity,
+        address=(MODBUS_SERVER_ADDRESS, MODBUS_SERVER_PORT)
+    )
+except (KeyboardInterrupt, SystemExit):
+    log.debug("Stopping Modbus server...")
+    log.debug("Stopping update thread...")
+    CONTINUE_UPDATING_MODBUS_REGISTERS = False
+
+log.debug("Script terminated.")
