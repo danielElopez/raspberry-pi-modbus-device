@@ -33,7 +33,7 @@ log.setLevel(logging.DEBUG)
 BLUETOOTH_DEVICE_SCANNING_ENABLED = True
 
 # Define the function that updates the registers
-CONTINUE_UPDATING_MODBUS_REGISTERS = False
+CONTINUE_UPDATING_MODBUS_REGISTERS = True
 
 
 def update_modbus_registers(args):
