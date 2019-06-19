@@ -20,6 +20,8 @@ from threading import Thread
 from time import sleep
 from os import popen
 from sys import exit
+from random import random  # For generating a simulated temperature
+from math import log as logarithm  # For generating a simulated temperature
 
 # Configure logging
 import logging
@@ -41,15 +43,29 @@ def update_modbus_registers(args):
     while (CONTINUE_UPDATING_MODBUS_REGISTERS is True):
         log.debug("Updating the server registers")
         simulated_modbus_server_context = args[0]
+        # Initialize the number of discovered bluetooth devices to 0
+        number_of_nearby_bluetooth_devices = 0
+        # Initialize the temperature to a simulated random value
+        temperature = int((110 + 4 * logarithm(100 * random())) * 100)
         # Read the board temperature
-        temperature = 1
         try:
             temperature = int((float(popen("vcgencmd measure_temp").readline().replace("temp=", "").replace("'C", "")) * 9 / 5 + 32) * 100)
         except Exception as ex:
             # Log any error, if it occurs
             log.debug("Error reading temperature: " + str(ex))
+            log.debug("Simulated temperature data will ge generated instead of a real value")
+        # Scan for nearby devices
+        try:
+            # Save the results to a file
+            popen("sudo timeout -s SIGINT 1s hcitool -i hci0 lescan --passive > bluetoothScanResults.txt")
+            # Open the file and count the lines, and save the line count as the number of devices
+            number_of_nearby_bluetooth_devices = len(open("bluetoothScanResults.txt").readlines())
+        except Exception as ex:
+            # Log any error, if it occurs
+            log.debug("Error scanning for bluetooth devices: " + str(ex))
+            log.debug("Default value of 0 will be used instead of a real value")
         # Write the new values back to the Modbus register
-        new_register_values = [temperature, heartbeat_counter]
+        new_register_values = [temperature, number_of_nearby_bluetooth_devices, heartbeat_counter]
         log.debug("New values: " + str(new_register_values))
         simulated_modbus_server_context.setValues(register_type, register_offset, new_register_values)
         # Increment the hearbeat counter by one
@@ -68,7 +84,7 @@ MODBUS_SERVER_PORT = 502
 
 # Specify the register map defaults
 starting_register_offset = 0
-number_of_registers_to_populate = 4
+number_of_registers_to_populate = 5
 default_register_value = 31416
 create_only_a_single_modbus_slave = True
 
