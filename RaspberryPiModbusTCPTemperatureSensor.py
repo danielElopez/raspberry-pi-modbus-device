@@ -23,6 +23,9 @@ from sys import exit
 from random import random  # For generating a simulated temperature
 from math import log as logarithm  # For generating a simulated temperature
 
+# Allow disabling bluetooth scanning
+BLUETOOTH_DEVICE_SCANNING_ENABLED = True
+
 # Configure logging
 import logging
 logging.basicConfig()
@@ -55,15 +58,16 @@ def update_modbus_registers(args):
             log.debug("Error reading temperature: " + str(ex))
             log.debug("Simulated temperature data will ge generated instead of a real value")
         # Scan for nearby devices
-        try:
-            # Save the results to a file
-            popen("sudo timeout -s SIGINT 1s hcitool -i hci0 lescan --passive > bluetoothScanResults.txt")
-            # Open the file and count the lines, and save the line count as the number of devices (omit the header line)
-            number_of_nearby_bluetooth_devices = len(open("bluetoothScanResults.txt").readlines()) - 1
-        except Exception as ex:
-            # Log any error, if it occurs
-            log.debug("Error scanning for bluetooth devices: " + str(ex))
-            log.debug("Default value of 0 will be used instead of a real value")
+        if (BLUETOOTH_DEVICE_SCANNING_ENABLED):
+            try:
+                # Save the results to a file
+                popen("sudo timeout -s SIGINT 1s hcitool -i hci0 lescan --passive > bluetoothScanResults.txt")
+                # Open the file and count the lines, and save the line count as the number of devices (omit the header line)
+                number_of_nearby_bluetooth_devices = len(open("bluetoothScanResults.txt").readlines()) - 1
+            except Exception as ex:
+                # Log any error, if it occurs
+                log.debug("Error scanning for bluetooth devices: " + str(ex))
+                log.debug("Default value of 0 will be used instead of a real value")
         # Write the new values back to the Modbus register
         new_register_values = [temperature, number_of_nearby_bluetooth_devices, heartbeat_counter]
         log.debug("New values: " + str(new_register_values))
