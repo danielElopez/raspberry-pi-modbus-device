@@ -23,14 +23,14 @@ from sys import exit
 from random import random  # For generating a simulated temperature
 from math import log as logarithm  # For generating a simulated temperature
 
-# Allow disabling bluetooth scanning
-BLUETOOTH_DEVICE_SCANNING_ENABLED = True
-
 # Configure logging
 import logging
 logging.basicConfig()
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
+
+# Allow disabling bluetooth scanning
+BLUETOOTH_DEVICE_SCANNING_ENABLED = True
 
 # Define the function that updates the registers
 CONTINUE_UPDATING_MODBUS_REGISTERS = False
