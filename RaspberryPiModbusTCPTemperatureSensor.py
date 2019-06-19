@@ -58,8 +58,8 @@ def update_modbus_registers(args):
         try:
             # Save the results to a file
             popen("sudo timeout -s SIGINT 1s hcitool -i hci0 lescan --passive > bluetoothScanResults.txt")
-            # Open the file and count the lines, and save the line count as the number of devices
-            number_of_nearby_bluetooth_devices = len(open("bluetoothScanResults.txt").readlines())
+            # Open the file and count the lines, and save the line count as the number of devices (omit the header line)
+            number_of_nearby_bluetooth_devices = len(open("bluetoothScanResults.txt").readlines()) - 1
         except Exception as ex:
             # Log any error, if it occurs
             log.debug("Error scanning for bluetooth devices: " + str(ex))
