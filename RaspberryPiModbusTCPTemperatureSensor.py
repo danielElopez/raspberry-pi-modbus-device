@@ -112,6 +112,10 @@ simulated_modbus_server_identity.ModelName = 'pymodbus Server'
 simulated_modbus_server_identity.MajorMinorRevision = '1.0'
 
 try:
+    # Print Bluetooth scanning status
+    log.debug("'Bluetooth device scanning enabled' setting:")
+    log.debug(BLUETOOTH_DEVICE_SCANNING_ENABLED)
+
     # Initialize the thread that will start updating our Modbus server's registers
     CONTINUE_UPDATING_MODBUS_REGISTERS = True
     update_registers_thread = Thread(target=update_modbus_registers, args=(simulated_modbus_server_context,))
